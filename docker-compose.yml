@@ -1,0 +1,23 @@
+services:
+  api:
+    build: .
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      APP_ENV: production
+      UPLOAD_DIR: /app/data/uploads
+      PROCESSED_DIR: /app/data/processed
+      DATABASE_URL: sqlite:////app/data/app.db
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      MAX_UPLOAD_SIZE_MB: "${MAX_UPLOAD_SIZE_MB:-50}"
+      MAX_ARCHIVE_SIZE_MB: "${MAX_ARCHIVE_SIZE_MB:-200}"
+      MAX_ARCHIVE_MEMBERS: "${MAX_ARCHIVE_MEMBERS:-256}"
+      MAX_COMPRESSION_RATIO: "${MAX_COMPRESSION_RATIO:-100}"
+      MAX_FEATURES: "${MAX_FEATURES:-10000}"
+      MAX_COORDINATES: "${MAX_COORDINATES:-1000000}"
+    volumes:
+      - geospatial-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  geospatial-data:

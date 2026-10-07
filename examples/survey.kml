@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Chennai survey example</name>
+    <Placemark id="parcel-a">
+      <name>Parcel A</name>
+      <ExtendedData><Data name="owner"><value>Example owner</value></Data></ExtendedData>
+      <Polygon>
+        <outerBoundaryIs><LinearRing><coordinates>
+          80.2700,13.0800 80.2710,13.0800 80.2710,13.0810 80.2700,13.0810 80.2700,13.0800
+        </coordinates></LinearRing></outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark id="road-a">
+      <name>Road</name>
+      <LineString><coordinates>80.2700,13.0800 80.2710,13.0800</coordinates></LineString>
+    </Placemark>
+    <Placemark id="station-a">
+      <name>Station</name>
+      <Point><coordinates>80.2700,13.0800</coordinates></Point>
+    </Placemark>
+  </Document>
+</kml>
