@@ -79,12 +79,12 @@ packages were not added to the production image.
 | README decisions and alternatives | PASS | Design Decisions and Alternatives |
 | README learning | PASS | Learning section |
 | README future scope | PASS | Future Scope section |
-| Public GitHub repository | FAIL | No commits/remote/public URL; publication prohibited by current instructions |
+| Public GitHub repository | PASS | Published by the owner at https://github.com/yaswanth-reddy14/Geospatial-File-Measurement-API |
 
 PASS for CRS handling means the documented local planar strategy meets the assignment,
-not universal geospatial accuracy. A cold local virtual-environment installation
-and hosted GitHub Actions execution were not run. Docker dependencies were installed
-without cached dependency build steps.
+not universal geospatial accuracy. Subsequent clean-environment checks are recorded
+in the CI investigation below. Hosted GitHub Actions steps have not executed because
+of an account lock. Docker dependencies were installed without cached build steps.
 
 ## Remaining limitations and risks
 
@@ -98,7 +98,8 @@ without cached dependency build steps.
   their suitability and area of use are not certified.
 - Crash-orphan reconciliation, authentication, rate limiting and storage quotas
   remain future deployment work. This was not a full vulnerability assessment.
-- There is no public submission yet. Technical compliance does not fulfill publication.
+- The repository is now public. Its first hosted CI run was blocked before any
+  steps executed by a GitHub account billing lock; see the CI investigation below.
 
 ## Repeat the checks
 
@@ -120,4 +121,60 @@ The verification project geospatial-fix-verification used its own volume/network
 these were removed after validation. Unrelated running services were untouched.
 The clean image remains available. Git ignores local runtime/test artifacts, and
 Docker recursively excludes application bytecode from its build context.
+
+## GitHub Actions investigation
+
+The owner published commit `7a81abe` after the implementation audit.
+[Run 37631844117](https://github.com/yaswanth-reddy14/Geospatial-File-Measurement-API/actions/runs/37631844117)
+failed before any checkout, Python setup, dependency installation or Docker build.
+Both the Windows and Docker annotations state that the account is locked due to a
+billing issue. Ubuntu's annotation explicitly identifies matrix cancellation after
+the Windows job failed. The public jobs API confirms empty step lists for all three.
+This is a GitHub account issue, not an observed application or dependency failure.
+The account owner must resolve the lock before hosted jobs can execute.
+
+Workflow changes preserve Windows Python 3.14 and Ubuntu Python 3.12, retain all
+lint/format/test checks, disable matrix fail-fast, upgrade pip, check dependencies
+and explicitly hash both requirements files for pip caching. Separate installation
+steps preserve native-command exit codes on Windows. Docker now builds without
+cached layers, waits for actual container health, runs real API smoke tests and
+all audit regressions on port 18001, prints logs and always removes disposable data.
+No continue-on-error, skipped tests, dependency downgrades or application changes
+were introduced. Actionlint 1.7.7 validated the revised workflow successfully.
+
+Fresh installations used the committed requirements rather than installed packages
+from the working project's virtual environment. Windows used a new temporary
+Python 3.14.8 environment with system site-packages disabled; imported package
+locations were verified against that environment. Linux used Python 3.12.15 in a
+disposable Debian Bookworm container with a new virtual environment and a read-only
+source mount. This verifies Linux compatibility, not execution on a hosted Ubuntu
+runner. Fiona is neither required nor installed: KML uses the secure XML parser.
+
+| Fresh-environment check | Windows Python 3.14.8 | Linux Python 3.12.15 |
+| --- | --- | --- |
+| Requirements installed from scratch, pip cache disabled | Passed | Passed |
+| pytest -q | 118 passed | 118 passed |
+| Coverage run | 118 passed; 96%, 685 statements / 25 missed | 118 passed; 96%, 706 statements / 25 missed |
+| Ruff lint / format | Passed / Passed | Passed / Passed |
+| pip check | No broken requirements | No broken requirements |
+| Live KML / ZIP smoke and all required GET endpoints | Passed | Passed |
+| Live audit regressions | 26 passed | 26 passed |
+
+The coverage statement counts differ between interpreter versions; both report 96%.
+The existing upstream Starlette/AnyIO deprecation warning appears on both platforms.
+
+The production Compose image was also rebuilt with `--no-cache` during this
+investigation. Fresh binary dependencies installed successfully, the service became
+healthy using `up -d --wait --wait-timeout 60`, and the fresh Windows environment
+ran KML/ZIP HTTP smoke checks plus all 26 audit regressions against the container.
+Imports inside the image confirmed GeoPandas 1.1.1, Shapely 2.1.2, PyProj 3.7.2 and
+pyogrio 0.12.1. The verification project, network and volume were removed afterward;
+unrelated services and the original .venv were preserved. Automatic execution policy
+blocked recursive deletion of the temporary Windows environment, which remains
+outside the repository in Windows Temp. Application source, tests, scripts and
+dependency pins are unchanged.
+
+The account lock cannot be repaired by a workflow change. Hosted PASS results are
+expected only after the owner resolves it and pushes/re-runs the updated workflow.
+No commit, push or remote modification was performed during this investigation.
 
